@@ -13,7 +13,7 @@ import { createMaterialTopTabNavigator } from "react-navigation-tabs";
 import MyTabs from "../../nav/TopTabNav";
 import { FONTS } from "../../constant";
 import { FontAwesome5 } from "@expo/vector-icons";
-import LinearGradient from "react-native-linear-gradient";
+import { LinearGradient } from "expo-linear-gradient";
 
 const Wallet = () => {
   const [isEnabled, setIsEnabled] = React.useState(false);
@@ -72,11 +72,12 @@ const Wallet = () => {
         style={{
           width: "90%",
           height: 150,
-          backgroundColor: "#024002",
+          backgroundColor: "#145A32",
           paddingHorizontal: "10%",
           justifyContent: "center",
           marginHorizontal: "5%",
           marginTop: "5%",
+          borderRadius: 15,
         }}
       >
         <Text
@@ -219,23 +220,44 @@ const Wallet = () => {
               justifyContent: "center",
             }}
           >
-            <View
+            <LinearGradient
+              colors={["#0D3602", "#ffffff"]}
+              start={{ x: 0.0, y: 1.0 }}
+              end={{ x: 1.0, y: 1.0 }}
               style={{
                 width: 150,
                 height: 150,
-                borderRadius: "70%",
-                backgroundColor: "green",
-                alignItems: "center",
-                justifyContent: "center",
+                borderRadius: 100,
               }}
             >
-              <FontAwesome5
-                name="clipboard-list"
-                size={130}
-                color="white"
-                style={{ position: "absolute", top: 40 }}
-              />
-            </View>
+              <View
+                style={{
+                  width: "100%",
+                  height: "100%",
+
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <FontAwesome5
+                  name="clipboard-list"
+                  size={130}
+                  color="white"
+                  style={{ position: "absolute", top: 40 }}
+                />
+              </View>
+            </LinearGradient>
+
+            <Text
+              style={{
+                paddingVertical: "5%",
+                color: "#145A32",
+                fontFamily: FONTS.regular,
+                fontSize: 16,
+              }}
+            >
+              You have no Activities yet
+            </Text>
           </View>
         </>
       )}
