@@ -1,20 +1,38 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from "expo-status-bar";
+import React from "react";
+import { SafeAreaView, StyleSheet, Text, View } from "react-native";
+import Button from "./components/Button";
+import { useFonts } from "expo-font";
+import Onboarding from "./screens/onboardingScreens/Onboarding";
+import Login from "./screens/Login/Login";
+import { NavigationContainer } from "@react-navigation/native";
+import AppNav from "./nav/AppNav";
+import HomePage from "./nav/HomePage";
+import MyTabs from "./nav/TopTabNav";
 
 export default function App() {
+  const [loaded] = useFonts({
+    PoppinsBold: require("./assets/fonts/Poppins-Bold.ttf"),
+    PoppinsExtraBold: require("./assets/fonts/Poppins-ExtraBold.ttf"),
+    PoppinsLight: require("./assets/fonts/Poppins-Light.ttf"),
+    PoppinsRegular: require("./assets/fonts/Poppins-Regular.ttf"),
+    PoppinsSemiBold: require("./assets/fonts/Poppins-SemiBold.ttf"),
+  });
+  if (!loaded) return null;
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      {/* <AppNav /> */}
+      <HomePage />
+      {/* <MyTabs /> */}
+    </NavigationContainer>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
