@@ -9,7 +9,8 @@ import {
 } from "react-native";
 import React from "react";
 import { AntDesign } from "@expo/vector-icons";
-import { COLORS } from "../../constant";
+import { COLORS, FONTS } from "../../constant";
+import { FontAwesome } from "@expo/vector-icons";
 
 const data = [
   {
@@ -79,12 +80,18 @@ const DAO = () => {
         }}
       >
         <View>
-          <Text>DAO</Text>
-          <Text>Sign Up to join an IBOOLA DAO</Text>
+          <Text
+            style={{ fontWeight: "700", fontSize: 30, fontFamily: FONTS.bold }}
+          >
+            DAO
+          </Text>
+          <Text style={{ fontFamily: FONTS.light, fontSize: 14 }}>
+            Sign Up to join an IBOOLA DAO
+          </Text>
         </View>
 
         <TouchableOpacity>
-          <AntDesign name="questioncircle" size={24} color="#123524" />
+          <AntDesign name="questioncircle" size={40} color="#123524" />
         </TouchableOpacity>
       </View>
       <View
@@ -92,10 +99,13 @@ const DAO = () => {
           flexDirection: "row",
           justifyContent: "space-between",
           paddingHorizontal: "5%",
+          paddingVertical: "3%",
         }}
       >
-        <Text>Available DAOs</Text>
-        <Text>See All</Text>
+        <Text style={{ fontFamily: FONTS.bold, fontSize: 20 }}>
+          Available DAOs
+        </Text>
+        <Text style={{ fontFamily: FONTS.light, fontSize: 16 }}>See All</Text>
       </View>
       <View style={{ paddingHorizontal: "5%" }}>
         <FlatList
@@ -120,7 +130,7 @@ const DAO = () => {
               style={{
                 width: 200,
                 height: 200,
-                backgroundColor: "lightgray",
+                backgroundColor: "white",
                 borderRadius: 15,
               }}
             >
@@ -135,13 +145,14 @@ const DAO = () => {
         />
       </View>
 
-      <View>
-        <Text>About DAO</Text>
+      <View style={{ paddingHorizontal: "5%", paddingVertical: "3%" }}>
+        <Text style={{ fontFamily: FONTS.bold, fontSize: 18 }}>About DAO</Text>
       </View>
 
       <View style={{ paddingHorizontal: "5%" }}>
         <FlatList
           data={data}
+          style={{ marginBottom: 100 }}
           scrollEnabled={true}
           keyExtractor={(_, index) => index.toString()}
           renderItem={({ item, index }) => (
@@ -170,12 +181,51 @@ const DAO = () => {
                     position: "absolute",
                     top: 10,
                     padding: 10,
+                    color: "white",
                   }}
                 >
                   {item._created}
                 </Text>
-                <Text>{item.title}</Text>
-                <Text>{item.subtitle}</Text>
+                <Text
+                  style={{
+                    color: "white",
+                    fontFamily: FONTS.bold,
+                    fontSize: 16,
+                    paddingHorizontal: "5%",
+                  }}
+                >
+                  {item.title}
+                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    paddingHorizontal: "3%",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "white",
+                      fontFamily: FONTS.regular,
+                      fontSize: 14,
+                      paddingHorizontal: "3%",
+                    }}
+                  >
+                    {item.subtitle}
+                  </Text>
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: "green",
+                      padding: 10,
+                      borderRadius: 50,
+                      borderWidth: 1,
+                      borderColor: "white",
+                    }}
+                  >
+                    <FontAwesome name="lock" size={24} color="white" />
+                  </TouchableOpacity>
+                </View>
               </ImageBackground>
             </View>
           )}
