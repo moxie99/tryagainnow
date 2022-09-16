@@ -1,22 +1,21 @@
-// contracts/SupportToken.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "./deps/ERC20.sol";
+import "./deps/Ownable.sol";
 
 /**
  * @notice A simple ERC20 Token implementation that also accepts donation for the project
  */
-contract IBoola is ERC20, Ownable {
-    constructor(uint initialMintAmount) ERC20("iBoola Token", "IBT") {
+contract IBoolaToken is ERC20, Ownable {
+    constructor() ERC20("iBoola Token", "IBT") {
         
         /// @notice mint 10000 tokens to the owner
-        _mint(_msgSender(), initialMintAmount);
+        _mint(_msgSender(), 6_000_000_000 * (10 ** 18));
     }
 
     function mint(address to, uint amount) public onlyOwner {
-        _mint(to.amount);
+        _mint(to, amount);
     }
 
     function burn(uint amount) public {
