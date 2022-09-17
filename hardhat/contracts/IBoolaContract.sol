@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./libraries/WasteToWealthLib.sol";
+import "./libraries/IBoolaLib.sol";
 import "./deps/Context.sol";
 import "./deps/Ownable.sol";
 import "./deps/IERC20.sol";
@@ -42,13 +42,13 @@ import "./deps/IERC20.sol";
     o On sign up, user gets 10 $IBT Token.
     o Waste collectors own a DAO.
     o Waste bin owners own a DAO.
-    o Reward sharing formula
-    ========================
+    o Reward sharing formula Note - It is configurable. The owner account is able to 
+        set each of these fields.
         - Waste generators 10%.
         - Collectors 65%.
         - Team 25%.
  */
-contract WasteToWealth is Context, Common, Ownable {
+contract IBoolaContract is Context, Common, Ownable {
 
     ///@dev New sign up reward
     uint public newSignUpReward;
@@ -64,6 +64,9 @@ contract WasteToWealth is Context, Common, Ownable {
 
     ///@dev Total bin registered to date
     uint public binCounter;
+
+    ///@dev Price of recycled waste
+    uint public price;
 
     /**
         @dev Array of bins 
@@ -84,7 +87,7 @@ contract WasteToWealth is Context, Common, Ownable {
         value:
            array of struct(s) 
      */
-    mapping (State=>WasteData[]) public garbages;
+    mapping (State=>WasteData[]) private _garbages;
     
     /**
         @dev Mapping of Waste State -> user -> profile
@@ -143,7 +146,7 @@ contract WasteToWealth is Context, Common, Ownable {
     */
     function signUpAsWasteCollector() public {
        require(!profiles[Category.COLLECTOR][_msgSender()].isRegistered, "Already sign up");
-       WasteToWealthLib.registerCollector(profiles, _msgSender());
+       IBoolaLib.registerCollector(profiles, _msgSender());
        IERC20(token).approve(_msgSender(), newSignUpReward);
     }
 
@@ -152,7 +155,7 @@ contract WasteToWealth is Context, Common, Ownable {
             @notice Caller must already be approves as BinOwner .
     */
     function addNewBin() public payable isApproved(Category.BINOWNER, _msgSender()) {
-        WasteToWealthLib.registerNewBin(bins, _msgSender());
+        IBoolaLib.registerNewBin(bins, _msgSender());
         binCounter ++;
     }
 
@@ -164,7 +167,15 @@ contract WasteToWealth is Context, Common, Ownable {
         address _owner = _getBinOwner(binId);
         if(_msgSender() != owner()) require(_msgSender() == _owner, "Not Authorized");
         
-        WasteToWealthLib.removeBin(bins, binId);
+        IBoolaLib.removeBin(bins, binId);
+    }
+
+    /**@dev Returns list of wastes under each 'State'
+        i.e Generated waste data, Collected waste data, ...rest
+    */
+    function garbages(uint8 _category) public returns(WasteData[] memory _wd) {
+        require(_category < 3, "Invalid selecetor");
+        _wd = _garbages[State(_category)]
     }
 
     ///@dev Return owner of bin at binId. 
@@ -178,7 +189,7 @@ contract WasteToWealth is Context, Common, Ownable {
                 cat should reference the Category enum.
      */
     function whitelistuser(address who, uint8 category) public onlyOwner validateCategory(category) {
-        WasteToWealthLib.setStatus(profiles, who, true, Category(category));
+        IBoolaLib.setStatus(profiles, who, true, Category(category));
     }
 
     /**
@@ -187,7 +198,7 @@ contract WasteToWealth is Context, Common, Ownable {
                 cat should reference the Category enum.
      */
     function blacklistUser(address who, uint8 category) public onlyOwner validateCategory(category){
-        WasteToWealthLib.setStatus(profiles, who, false, Category(category));
+        IBoolaLib.setStatus(profiles, who, false, Category(category));
     }
 
     /**
@@ -206,14 +217,14 @@ contract WasteToWealth is Context, Common, Ownable {
             Note To successfully generate waste, bin id must be provided.
                     This represents the destination where wastes are dumped.
      */
-    function generateWaste(bytes memory _data) public isApproved(Category.GENERATOR, _msgSender()) {
+    function generateWaste(string memory _data) public isApproved(Category.GENERATOR, _msgSender()) {
         State state = State.GENERATED;
         totalWasteGenerated ++;
         uint nonce = totalWasteGenerated;
-        WasteToWealthLib.portToMap(
-            garbages, 
+        IBoolaLib.portToMap(
+            _garbages, 
              WasteData(
-                keccak256(abi.encodePacked(_data, nonce)), 
+                keccak256(abi.encodePacked(bytes(_data), nonce)), 
                 address(0), 
                 _msgSender(), 
                 address(0),
@@ -238,20 +249,22 @@ contract WasteToWealth is Context, Common, Ownable {
             @param binId - Bin where the waste is located.
             @param wasteId - Which waste to collect.
                     Note - Every waste is unique to another.
+                            To make purchase of manure easy, wastes are recycled
+                            in 50s.
      */
     function recycle(uint binId, uint wasteId) internal isApproved(Category.RECYCLER, _msgSender()) validateWasteId(binId, wasteId, State.COLLECTED, "Invalid waste pointer") {
-        WasteData memory outWaste = WasteToWealthLib.popFromArray(bins, binId, wasteId);
-        WasteToWealthLib.portToMap(garbages, outWaste, State.RECYCLED);
+        WasteData memory outWaste = IBoolaLib.popFromArray(bins, binId, wasteId);
+        IBoolaLib.portToMap(_garbages, outWaste, State.RECYCLED);
         uint amount = collectorReward;
 
-        (uint collector, uint generator, uint team) = WasteToWealthLib.split(formula, amount);
+        (uint collector, uint generator, uint team) = IBoolaLib.split(formula, amount);
         IERC20(token).approve(outWaste.collector, collector);
         IERC20(token).approve(outWaste.generator, generator);
         IERC20(token).approve(address(this), team);
 
     }
 
-    /**@notice Withdraw reward if any
+    /**@notice Withdraw reward if any {IBoola Token}
         Note - Caller must have previous reward otherwise it fails.
      */
     function withdraw() public {
@@ -267,15 +280,21 @@ contract WasteToWealth is Context, Common, Ownable {
                     o @param binId - Location of bin to deposit collected waste. ie bin index
                     o @param wasteId - Identifier for waste collected.
      */
-    function collectWaste(uint binId, uint wasteId) public isApproved(Category.COLLECTOR, _msgSender()) validateWasteId(binId, wasteId, State.GENERATED, "Invalid waste pointer") {
-        require(
-            profiles[Category.COLLECTOR][_msgSender()].approval && 
-            profiles[Category.COLLECTOR][_msgSender()].isRegistered,
-            "Not allowed"
-        );
-        WasteData memory outWaste = WasteToWealthLib.popFromMapping(garbages, wasteId, State.GENERATED);
-        WasteToWealthLib.portToArray(bins, binId, outWaste, State.COLLECTED);
+    function collectWaste(uint binId, uint[] memory wasteIds) public isApproved(Category.COLLECTOR, _msgSender()) validateWasteId(binId, wasteId, State.GENERATED, "Invalid waste pointer") {
+        require(profiles[Category.COLLECTOR][_msgSender()].isRegistered,"Not allowed");
+        WasteData memory outWaste = IBoolaLib.popFromMapping(_garbages, wasteId, State.GENERATED);
+        IBoolaLib.portToArray(bins, binId, outWaste, State.COLLECTED);
 
+    }
+
+    function buyRecycled(uint volume) public {
+        require(garbages[State.RECYCLED].length > 0, "Not available");
+        d
+;    }
+
+    ///@dev Sets new price for recycled waste.
+    function setPrice(uint newPrice) public onlyOwner {
+        price = newPrice;
     }
 
     ///@dev Sets new sign up reward. Note With access modifier
@@ -290,7 +309,3 @@ contract WasteToWealth is Context, Common, Ownable {
 
 
 }
-
-
-
-// Ticket Created #801750
