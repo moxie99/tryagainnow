@@ -1,46 +1,40 @@
 {
-  "name": "wastetowealth",
+  "name": "@celo-composer/monorepo",
   "version": "1.0.0",
-  "main": "node_modules/expo/AppEntry.js",
+  "description": "Get started building PWAs on Celo",
+  "private": true,
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "react-app:dev": "yarn workspace @celo-composer/react-app dev",
+    "react-app:build": "yarn workspace @celo-composer/react-app build",
+    "react-app:start": "yarn workspace @celo-composer/react-app start",
+    "react-app:lint": "yarn workspace @celo-composer/react-app lint",
+    "hardhat:test": "yarn workspace @celo-composer/hardhat test",
+    "hardhat:deploy": "yarn workspace @celo-composer/hardhat deploy",
+    "hardhat:watch": "yarn workspace @celo-composer/hardhat watch",
+    "hardhat:accounts": "yarn workspace @celo-composer/hardhat accounts",
+    "hardhat:devchain": "yarn workspace @celo-composer/hardhat devchain",
+    "hardhat:fork-mainnet": "yarn workspace @celo-composer/hardhat fork-mainnet",
+    "hardhat:deploy-reset-watch": "yarn workspace @celo-composer/hardhat deploy-reset-watch",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare-hardhat": "cd packages/hardhat && yarn && npx hardhat typechain && yarn deploy",
+    "build-ui": "yarn prepare-hardhat && cd packages/react-app && yarn && yarn build"
   },
-  "dependencies": {
-    "@expo/vector-icons": "^13.0.0",
-    "@react-native-community/masked-view": "^0.1.11",
-    "@react-navigation/bottom-tabs": "^6.3.3",
-    "@react-navigation/material-top-tabs": "^6.2.3",
-    "@react-navigation/native": "^6.0.12",
-    "@react-navigation/native-stack": "^6.8.0",
-    "@types/react-native": "~0.69.1",
-    "expo": "~46.0.9",
-    "expo-font": "^10.2.0",
-    "expo-linear-gradient": "~11.4.0",
-    "expo-status-bar": "~1.4.0",
-    "react": "18.0.0",
-    "react-native": "0.69.5",
-    "react-native-app-intro-slider": "^4.0.4",
-    "react-native-gesture-handler": "~2.5.0",
-    "react-native-linear-gradient": "^2.6.2",
-    "react-native-modal": "^13.0.1",
-    "react-native-pager-view": "5.4.24",
-    "react-native-paper": "^4.12.4",
-    "react-native-reanimated": "~2.9.1",
-    "react-native-responsive-screen": "^1.4.2",
-    "react-native-safe-area-context": "4.3.1",
-    "react-native-screens": "~3.15.0",
-    "react-native-tab-view": "^3.1.1",
-    "react-native-vector-icons": "^9.2.0",
-    "react-navigation": "^4.4.4",
-    "react-navigation-tabs": "^2.11.2",
-    "typescript": "^4.6.3"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/celo-org/celo-progressive-dapp-starter.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/celo-org/celo-progressive-dapp-starter/issues"
+  },
+  "homepage": "https://github.com/celo-org/celo-progressive-dapp-starter#readme",
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9",
-    "@types/react": "17.0.21"
-  },
-  "private": true
+    "@netlify/plugin-nextjs": "^4.2.5"
+  }
 }

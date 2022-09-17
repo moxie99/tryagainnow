@@ -263,7 +263,7 @@ contract IBoolaContract is Context, Common, Ownable {
         IERC20(token).approve(address(this), team);
 
     }
-
+    
     /**@notice Withdraw reward if any {IBoola Token}
         Note - Caller must have previous reward otherwise it fails.
      */
@@ -280,8 +280,17 @@ contract IBoolaContract is Context, Common, Ownable {
                     o @param binId - Location of bin to deposit collected waste. ie bin index
                     o @param wasteId - Identifier for waste collected.
      */
+
+    function collectWaste(uint binId, uint wasteId) public isApproved(Category.COLLECTOR, _msgSender()) validateWasteId(binId, wasteId, State.GENERATED, "Invalid waste pointer") {
+        require(
+            profiles[Category.COLLECTOR][_msgSender()].approval && 
+            profiles[Category.COLLECTOR][_msgSender()].isRegistered,
+            "Not allowed"
+        );
+        
     function collectWaste(uint binId, uint[] memory wasteIds) public isApproved(Category.COLLECTOR, _msgSender()) validateWasteId(binId, wasteId, State.GENERATED, "Invalid waste pointer") {
         require(profiles[Category.COLLECTOR][_msgSender()].isRegistered,"Not allowed");
+
         WasteData memory outWaste = IBoolaLib.popFromMapping(_garbages, wasteId, State.GENERATED);
         IBoolaLib.portToArray(bins, binId, outWaste, State.COLLECTED);
 
@@ -289,13 +298,14 @@ contract IBoolaContract is Context, Common, Ownable {
 
     function buyRecycled(uint volume) public {
         require(garbages[State.RECYCLED].length > 0, "Not available");
-        d
-;    }
+        
+     }
 
     ///@dev Sets new price for recycled waste.
     function setPrice(uint newPrice) public onlyOwner {
         price = newPrice;
     }
+
 
     ///@dev Sets new sign up reward. Note With access modifier
     function setSignUpReward(uint newReward) public onlyOwner{
@@ -309,3 +319,8 @@ contract IBoolaContract is Context, Common, Ownable {
 
 
 }
+
+
+
+
+// Ticket Created #801750
