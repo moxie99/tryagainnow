@@ -10,8 +10,17 @@ library WasteToWealthLib {
       @param self - Storage
       @param newCollector - Address of new Collector to add.
    */
+       uint32 transactionTime;
+    uint wasteCount;
+    bool approval;
+    bool isRegistered;
+    WasteData[] purchased;
   function registerCollector(mapping (Common.Category=>mapping(address=>Common.Profile)) storage self, address newCollector) internal {
-    self[Common.Category.COLLECTOR][newCollector] = Common.Profile(_now(), 0, false, true);
+    Common.Category _c = Common.Category.COLLECTOR;
+    self[_c][newCollector].transactionTime = _now();
+    self[_c][newCollector].wasteCount = 0;
+    self[_c][newCollector].approval = false;
+    self[_c][newCollector].isRegistered = true;
   }
 
   /**
@@ -34,6 +43,7 @@ library WasteToWealthLib {
     );
   }
 
+  ///@dev Moves waste to bin
   function portToArray(Common.BinData[] storage self, uint binId, Common.WasteData memory inWaste, Common.State state) internal {
     self[binId].bin.push(Common.WasteData(
       inWaste.value,
@@ -45,11 +55,13 @@ library WasteToWealthLib {
     );
   }
 
+  ///@dev Removes waste at 'wasteId' from bin at 'binId' in bin array at hashmap 'self'
   function popFromMapping(mapping (Common.State=>Common.WasteData[]) storage self, uint wasteId, Common.State state) internal returns(Common.WasteData memory _waste) {
     _waste = self[state][wasteId];
     delete self[state][wasteId];
   }
 
+  ///@dev Removes waste at 'wasteId' from bin at 'binId' in bin array 'self'
   function popFromArray(Common.BinData[] storage self, uint binId, uint wasteId) internal returns(Common.WasteData memory _waste) {
     _waste = self[binId].bin[wasteId];
     delete self[binId].bin[wasteId];

@@ -131,6 +131,22 @@ contract IBoolaContract is Context, Common, Ownable {
         _;
     }
 
+    //Checks that the size of wastes not greater than 50
+    modifier validateSize(uint[] memory wasteIDs, string[] memory wastedata) {
+        (uint8 low, uint8 high) = (0, 50);
+        wastedata.length == 0 ? require(
+            wasteIDs.length > low && wasteIDs.length <= high, 
+            "invalid"
+        ) : require(wastedata.length > low && wastedata.length <= high, "invalid");
+        _;
+    }
+
+    //Checks that the size of wastes not greater than 50
+    modifier validateSize(string[] memory wastedata) {
+        if(wastedata.length > 50) revert MaxWasteTransportExceeded();
+        _;
+    }
+
     constructor (address _token) { 
         token = _token;
         newSignUpReward = 10 * (10 ** 18);
@@ -173,9 +189,9 @@ contract IBoolaContract is Context, Common, Ownable {
     /**@dev Returns list of wastes under each 'State'
         i.e Generated waste data, Collected waste data, ...rest
     */
-    function garbages(uint8 _category) public returns(WasteData[] memory _wd) {
+    function garbages(uint8 _category) public view returns(WasteData[] memory) {
         require(_category < 3, "Invalid selecetor");
-        _wd = _garbages[State(_category)]
+        return _garbages[State(_category)]
     }
 
     ///@dev Return owner of bin at binId. 
@@ -234,6 +250,13 @@ contract IBoolaContract is Context, Common, Ownable {
         );
     }
 
+    ///@dev Generates multiple waste data
+    function generateMultipleWaste(string[] memory data) public validateSize(Empty.wasteIds, data) {
+        for uint(i = 0; i < data.length; i++) {
+            generateWaste(data[i]);
+        }
+    }
+
     /**
         @dev Gets approval for user 'who'
             @param cat - Category of user e.g COLLECTOR etc
@@ -263,7 +286,15 @@ contract IBoolaContract is Context, Common, Ownable {
         IERC20(token).approve(address(this), team);
 
     }
-    
+
+    ///@notice Can recycle wastes greater than 0 but less than 51
+    function recycleMultiple(uint binId, uint[] memory wasteIds) public validateSize(wasteIds, Empty.wastedata) {
+        for uint(i = 0; i < wasteIds.length; i++) {
+            recycle(binId, data[i]);
+        }
+    }
+
+
     /**@notice Withdraw reward if any {IBoola Token}
         Note - Caller must have previous reward otherwise it fails.
      */
@@ -281,14 +312,7 @@ contract IBoolaContract is Context, Common, Ownable {
                     o @param wasteId - Identifier for waste collected.
      */
 
-    function collectWaste(uint binId, uint wasteId) public isApproved(Category.COLLECTOR, _msgSender()) validateWasteId(binId, wasteId, State.GENERATED, "Invalid waste pointer") {
-        require(
-            profiles[Category.COLLECTOR][_msgSender()].approval && 
-            profiles[Category.COLLECTOR][_msgSender()].isRegistered,
-            "Not allowed"
-        );
-        
-    function collectWaste(uint binId, uint[] memory wasteIds) public isApproved(Category.COLLECTOR, _msgSender()) validateWasteId(binId, wasteId, State.GENERATED, "Invalid waste pointer") {
+    function collectWaste(uint binId, uint wasteIds) public isApproved(Category.COLLECTOR, _msgSender()) validateWasteId(binId, wasteId, State.GENERATED, "Invalid waste pointer") {
         require(profiles[Category.COLLECTOR][_msgSender()].isRegistered,"Not allowed");
 
         WasteData memory outWaste = IBoolaLib.popFromMapping(_garbages, wasteId, State.GENERATED);
@@ -296,8 +320,39 @@ contract IBoolaContract is Context, Common, Ownable {
 
     }
 
-    function buyRecycled(uint volume) public {
-        require(garbages[State.RECYCLED].length > 0, "Not available");
+    //See `collectWaste()` except that this runs mulitple time.
+    function collectMultipleWaste(uint binId, uint[] memory wasteIds) public validateSize(wasteIds, Empty.wastedata) {
+        for uint(i = 0; i < wasteIds.length; i++) {
+            collectWaste(binId, wasteIds[i]);
+        }
+    }
+
+    /**@notice Buy recycled waste in form of manure
+        NOTE: Only recycled waste can be bought.
+        If available manure cannot cover requested volume, buyer simply 
+        purchased available volume.
+     */
+    function buyRecycled(uint volume) public payable {
+        uint len = garbages[State.RECYCLED].length;
+        uint actualVolume;
+        State _s = State.RECYCLED;
+        require(len > 0 && len >= volume, "Not available");
+        for(uint i = 0; i < volume; i++;) {
+            WasteData memory wd = garbages[_s][i];
+            if(wd.recycler != address(0)) {
+                actualVolume ++;
+                profiles[Category.SOLD][_msgSender()].purchased.push(WasteData({
+                    wd.value;
+                    wd.collector;
+                    wd.generator;
+                    wd.recycler;
+                    wd.state;
+                }))
+                delete garbages[_s][i];
+            }
+        }
+        uint amtToPay = price * actualVolume;
+        require(msg.value >= amtToPay, "IValue");
         
      }
 
