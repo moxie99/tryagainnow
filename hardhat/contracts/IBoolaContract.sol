@@ -65,6 +65,9 @@ contract IBoolaContract is Context, Common, Ownable {
     ///@dev Total bin registered to date
     uint public binCounter;
 
+    ///@dev Price of recycled waste
+    uint public price;
+
     /**
         @dev Array of bins 
             { Contain bins which contain collected wastes which contains wastedata}
@@ -246,6 +249,8 @@ contract IBoolaContract is Context, Common, Ownable {
             @param binId - Bin where the waste is located.
             @param wasteId - Which waste to collect.
                     Note - Every waste is unique to another.
+                            To make purchase of manure easy, wastes are recycled
+                            in 50s.
      */
     function recycle(uint binId, uint wasteId) internal isApproved(Category.RECYCLER, _msgSender()) validateWasteId(binId, wasteId, State.COLLECTED, "Invalid waste pointer") {
         WasteData memory outWaste = IBoolaLib.popFromArray(bins, binId, wasteId);
@@ -258,8 +263,8 @@ contract IBoolaContract is Context, Common, Ownable {
         IERC20(token).approve(address(this), team);
 
     }
-
-    /**@notice Withdraw reward if any
+    
+    /**@notice Withdraw reward if any {IBoola Token}
         Note - Caller must have previous reward otherwise it fails.
      */
     function withdraw() public {
@@ -275,16 +280,32 @@ contract IBoolaContract is Context, Common, Ownable {
                     o @param binId - Location of bin to deposit collected waste. ie bin index
                     o @param wasteId - Identifier for waste collected.
      */
+
     function collectWaste(uint binId, uint wasteId) public isApproved(Category.COLLECTOR, _msgSender()) validateWasteId(binId, wasteId, State.GENERATED, "Invalid waste pointer") {
         require(
             profiles[Category.COLLECTOR][_msgSender()].approval && 
             profiles[Category.COLLECTOR][_msgSender()].isRegistered,
             "Not allowed"
         );
+        
+    function collectWaste(uint binId, uint[] memory wasteIds) public isApproved(Category.COLLECTOR, _msgSender()) validateWasteId(binId, wasteId, State.GENERATED, "Invalid waste pointer") {
+        require(profiles[Category.COLLECTOR][_msgSender()].isRegistered,"Not allowed");
+
         WasteData memory outWaste = IBoolaLib.popFromMapping(_garbages, wasteId, State.GENERATED);
         IBoolaLib.portToArray(bins, binId, outWaste, State.COLLECTED);
 
     }
+
+    function buyRecycled(uint volume) public {
+        require(garbages[State.RECYCLED].length > 0, "Not available");
+        
+     }
+
+    ///@dev Sets new price for recycled waste.
+    function setPrice(uint newPrice) public onlyOwner {
+        price = newPrice;
+    }
+
 
     ///@dev Sets new sign up reward. Note With access modifier
     function setSignUpReward(uint newReward) public onlyOwner{
@@ -298,6 +319,7 @@ contract IBoolaContract is Context, Common, Ownable {
 
 
 }
+
 
 
 
