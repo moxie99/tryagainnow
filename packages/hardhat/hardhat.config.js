@@ -13,6 +13,8 @@ const mnemonicPath = "m/44'/52752'/0'/0"; // derivation path used by Celo
 const DEVCHAIN_MNEMONIC =
   "concert load couple harbor equip island argue ramp clarify fence smart topic";
 
+const celoMnemonic = process.env.CELOMNEMONIC;
+
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 
@@ -24,37 +26,45 @@ module.exports = {
   networks: {
     localhost: {
       url: "http://127.0.0.1:8545",
-      accounts: {
-        mnemonic: DEVCHAIN_MNEMONIC,
-      },
+      port: 8545,            // Standard Ethereum port (default: none)
+      network_id: "*",       // Any network (default: none)
     },
+
     alfajores: {
       url: "https://alfajores-forno.celo-testnet.org",
       accounts: [process.env.PRIVATE_KEY],
       chainId: 44787,
     },
-    alfajoresDatahub: {
-      url: "https://celo-alfajores--rpc.datahub.figment.io/apikey/<API KEY>",
-      accounts: [process.env.PRIVATE_KEY],
-      chainId: 44787,
-    },
+
+    // alfajoresDatahub: {
+    //   url: "https://celo-alfajores--rpc.datahub.figment.io/apikey/<API KEY>",
+    //   accounts: [process.env.PRIVATE_KEY],
+    //   // accounts: [celoMnemonic],
+    //   chainId: 44787,
+    // },
+
     celo: {
       url: "https://forno.celo.org",
+      // accounts: [process.env.celoMnemonic],
       accounts: [process.env.PRIVATE_KEY],
       chainId: 42220,
     },
-    celoDatahub: {
-      url: "https://celo-mainnet--rpc.datahub.figment.io/apikey/<API KEY>",
-      accounts: [process.env.PRIVATE_KEY],
-      chainId: 42220,
-    },
+
+    // celoDatahub: {
+    //   url: "https://celo-mainnet--rpc.datahub.figment.io/apikey/<API KEY>",
+    //   accounts: [process.env.PRIVATE_KEY],
+    //   chainId: 42220,
+    // },
   },
+
   solidity: {
     version: "0.8.4",
   },
+
   namedAccounts: {
     deployer: 0,
   },
+
   typechain: {
     outDir: "types",
     target: "web3-v1",
@@ -100,3 +110,4 @@ task("print-account", "Prints the address of the account", () => {
   const wallet = new hre.ethers.Wallet(process.env.PRIVATE_KEY);
   console.log(`Account: `, wallet.address);
 });
+
